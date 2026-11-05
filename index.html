@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071a38">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JUMP LAB">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>JUMP LAB</title>
+<style>
+:root{color-scheme:dark;--bg:#06152d;--panel:#0d2345;--panel2:#102d58;--blue:#2f8cff;--cyan:#55d8ff;--muted:#9bb2d2;--white:#f4f8ff;--line:#24436c;--green:#46d6a0;--orange:#ffbf69;--red:#ff6b82}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -10%,#153e75 0%,var(--bg) 52%);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 15px calc(20px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:12px;padding:14px 2px 16px}.logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(145deg,#43baff,#1455bb);display:grid;place-items:center;box-shadow:0 8px 24px #1678df55}.logo img{width:100%;height:100%;object-fit:cover;border-radius:14px}.brand{font-weight:900;letter-spacing:2px;font-size:18px}.sub{font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-top:3px}
+h1{font-size:25px;margin:6px 0 4px}h2{font-size:15px;margin:0 0 12px}.muted{color:var(--muted);font-size:13px;line-height:1.45}
+.card{background:linear-gradient(145deg,#10294e,#0a1e3c);border:1px solid var(--line);border-radius:20px;padding:15px;margin:12px 0;box-shadow:0 12px 32px #0002}
+label{display:block;color:#b8cbe5;font-size:12px;margin-bottom:7px}input{width:100%;background:#061832;border:1px solid #31537e;color:white;padding:12px;border-radius:12px;font-size:17px;outline:none}input:focus{border-color:var(--cyan)}
+.row{display:flex;gap:9px}.row>*{flex:1;min-width:0}
+button{border:0;border-radius:14px;padding:13px 12px;font-weight:800;font-size:14px;color:white;background:linear-gradient(135deg,#329cff,#1760c8);cursor:pointer;min-height:47px}
+button.secondary{background:#17365f;border:1px solid #315783}button.danger{background:linear-gradient(135deg,#ff7777,#c43e56)}button:disabled{opacity:.38;cursor:not-allowed}
+#videoWrap{position:relative;background:#020a16;border-radius:18px;overflow:hidden;aspect-ratio:3/4;border:1px solid #2b5689;max-height:62vh}
+video,#overlay{position:absolute;width:100%;height:100%;inset:0;object-fit:cover;transform:scaleX(-1)}
+#overlay{pointer-events:none}#placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:25px;color:#91aaca;font-size:14px;line-height:1.5}
+.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:10px 2px}.dot{width:8px;height:8px;border-radius:50%;background:#71839c;flex:none}.dot.live{background:var(--green);box-shadow:0 0 12px var(--green)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.metric{background:#071a35;border:1px solid #23436b;border-radius:15px;padding:12px}.metric strong{display:block;font-size:24px;letter-spacing:-.5px;margin:4px 0}.metric span{font-size:10px;color:var(--muted);letter-spacing:.3px}.metric.primary strong{font-size:34px;color:#66c7ff}.metric.wide{grid-column:1/-1}
+#videoWrap{transition:border-color .3s,box-shadow .3s}#videoWrap.calibrated{border:4px solid var(--green);box-shadow:0 0 26px #46d6a0aa}
+#calBanner{position:absolute;left:10px;right:10px;top:10px;z-index:3;padding:14px 16px;border-radius:16px;background:#071a38ee;border:2px solid #3a6ea5;text-align:center;font-weight:900;font-size:20px;line-height:1.25;backdrop-filter:blur(6px)}
+#calBanner.ok{background:#0b4d35f5;border-color:var(--green);color:#dcfff0;font-size:26px;padding:20px 16px}
+#calBanner.compact{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;font-size:13px;padding:7px 14px;border-radius:20px}
+#calBar{height:9px;border-radius:6px;background:#ffffff26;margin-top:11px;overflow:hidden}#calBar i{display:block;height:100%;width:0;background:var(--cyan);transition:width .12s}
+#calBanner.ok #calBar,#calBanner.compact #calBar,#calBanner.nobar #calBar{display:none}
+#calStatus{padding:14px;background:#071a35;border:2px solid #2b5689;border-radius:14px;margin:4px 0 12px}#calStatus span{font-size:17px;font-weight:800;color:var(--white);line-height:1.3}#calStatus .dot{width:14px;height:14px}
+#calStatus.ok{background:#0c3a2e;border-color:var(--green)}#calStatus.ok span{color:#bfffe3}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:15px 0 10px;position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));z-index:5;background:#06152ddd;padding:7px;border:1px solid #24436c;border-radius:18px;backdrop-filter:blur(16px)}
+.historyFilter{padding:8px 5px;min-height:38px;font-size:11px}.historyFilter.active{background:linear-gradient(135deg,#329cff,#1760c8)}.tabs button{min-height:43px;padding:9px 4px;font-size:12px}.tabs .active{background:linear-gradient(135deg,#329cff,#1760c8)}.hidden{display:none!important}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #24436c}.history-item:last-child{border:0}.history-item strong{font-size:17px}.history-item small{display:block;color:var(--muted);margin-top:4px}
+#progress{width:100%;height:190px;position:static;transform:none}
+.note{font-size:11px;color:#91aaca;line-height:1.5}.pill{display:inline-block;background:#14365e;color:#9bdcff;padding:5px 9px;border-radius:20px;font-size:11px}
+.result-banner{padding:11px 13px;border-radius:13px;background:#0c3a4a;border:1px solid #1e7186;color:#a8efff;font-size:12px;line-height:1.4;margin-top:10px}
+.modal{position:fixed;inset:0;background:#020914dd;z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:15px;padding-bottom:calc(15px + env(safe-area-inset-bottom));backdrop-filter:blur(7px)}
+.modalbox{width:100%;max-width:520px;background:#10294e;border:1px solid #37618e;border-radius:22px;padding:20px;box-shadow:0 20px 60px #0009}
+.modalbox h2{font-size:19px}.modal-actions{display:flex;gap:9px;margin-top:17px}.modal-actions button{flex:1}
+.setting{padding:12px 0;border-bottom:1px solid #24436c}.setting:last-child{border:0}.setting strong{display:block;font-size:14px;margin-bottom:4px}
+.smalltag{font-size:10px;color:#a8c6e9;letter-spacing:1px}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo"><img src="icon-192.png" alt="JUMP LAB" onerror="this.style.display='none'"></div>
+ <div><div class="brand">JUMP LAB</div><div class="sub">VERTICAL JUMP ANALYSIS</div></div>
+</header>
+
+<main>
+<section id="measureView">
+ <h1>Misurazione</h1><p class="muted">Prepara il test, controlla il tracciamento e analizza il salto in tempo reale.</p>
+ <div class="card">
+  <h2>Calibrazione automatica</h2>
+  <div id="calStatus" class="status"><i class="dot"></i><span>Attiva la fotocamera: la calibrazione parte da sola</span></div>
+  <div class="row"><button id="recalBtn" class="secondary">Ricalibra</button></div>
+  <p class="note">Mettiti in piedi a figura intera, con testa e piedi ben visibili, e resta fermo per circa un secondo: la calibrazione avviene in automatico. L'altezza si imposta nella schermata Impostazioni.</p>
+ </div>
+ <div class="card">
+  <div class="row" style="align-items:center;margin-bottom:10px"><h2 style="margin:0">Tracciamento corporeo</h2><span class="pill" id="poseBadge">NON ATTIVO</span></div>
+  <div id="videoWrap"><video id="video" playsinline muted></video><canvas id="overlay"></canvas><div id="calBanner" class="hidden"><div id="calBannerText"></div><div id="calBar"><i></i></div></div><div id="placeholder">Attiva la fotocamera frontale.<br>Posizionati a figura intera: testa, gambe, piedi e pavimento devono restare nell'inquadratura.</div></div>
+  <div class="status"><i class="dot" id="cameraDot"></i><span id="cameraStatus">Fotocamera non attiva</span></div>
+  <div class="row"><button id="cameraBtn">Attiva fotocamera</button><button id="cameraOffBtn" class="secondary" disabled>Chiudi</button></div>
+  <p class="note">I punti azzurri mostrano le articolazioni riconosciute dal modello. Tieni il telefono fermo, all'altezza del bacino circa, senza inclinare l'inquadratura.</p>
+ </div>
+ <div class="card">
+  <h2>Sessione di test</h2>
+  <div class="row"><button id="startBtn" disabled>▶ Inizia test</button><button id="finishBtn" class="danger" disabled>■ Fine test</button></div>
+  <div id="testStatus" class="status"><i class="dot"></i><span>Pronto per iniziare</span></div>
+  <div id="livePreview" class="result-banner hidden">Salto rilevato: anteprima in aggiornamento…</div>
+  <p class="note">Ogni test registra un salto. Dopo l'atterraggio vedrai l'anteprima; premi Fine test e scegli se salvare o scartare. Per ripetere, premi di nuovo Inizia test.</p>
+ </div>
+ <div class="card">
+  <h2>Risultato del test</h2>
+  <div class="metric-grid">
+   <div class="metric primary wide"><span>ALTEZZA SALTO</span><strong id="outHeight">—</strong><span>cm · punta del piede</span></div>
+   <div class="metric"><span>TEMPO DI VOLO</span><strong id="outFlight">—</strong><span>secondi</span></div>
+   <div class="metric"><span>VELOCITÀ MEDIA DI SALITA</span><strong id="outSpeed">—</strong><span>m/s · stacco → punto più alto</span></div>
+  </div>
+  <p class="note" style="margin-top:11px">L'altezza usa lo spostamento verticale della punta del piede rispetto alla posizione iniziale. La velocità è la velocità media di salita, calcolata fino al punto più alto. L'altezza da tempo di volo è disponibile nello storico come misura di confronto.</p>
+ </div>
+</section>
+
+<section id="historyView" class="hidden">
+ <h1>Storico</h1><p class="muted">I tuoi salti salvati e l'andamento della prestazione.</p>
+ <div class="card">
+  <div class="row" style="margin-bottom:12px">
+   <button class="secondary historyFilter active" data-filter="all">Tutti</button><button class="secondary historyFilter" data-filter="7">7 giorni</button><button class="secondary historyFilter" data-filter="30">30 giorni</button><button class="secondary historyFilter" data-filter="365">1 anno</button>
+  </div>
+  <div class="metric-grid">
+   <div class="metric primary"><span>MIGLIOR SALTO</span><strong id="bestJump">—</strong><span id="bestDate">—</span></div>
+   <div class="metric"><span>MEDIA</span><strong id="averageJump">—</strong><span>cm</span></div>
+   <div class="metric"><span>TOTALE SALTI</span><strong id="totalJumps">0</strong><span>salvati</span></div>
+   <div class="metric"><span>ULTIMA VELOCITÀ</span><strong id="lastSpeed">—</strong><span>m/s</span></div>
+  </div>
+ </div>
+ <div class="card"><h2>Altezza salto (cm)</h2><canvas id="progress" width="620" height="260"></canvas><p class="note">Andamento dei salti salvati nel periodo selezionato.</p></div>
+ <div class="card"><div class="row" style="align-items:center"><h2 style="margin:0">Salti registrati</h2><button id="clearHistory" class="secondary" style="flex:0 0 auto;min-height:36px;padding:8px 11px;font-size:11px">Svuota</button></div><div id="historyList" class="muted" style="margin-top:9px">Nessun salto salvato.</div></div>
+</section>
+
+<section id="settingsView" class="hidden">
+ <h1>Impostazioni</h1><p class="muted">Preferenze e indicazioni per misurazioni più ripetibili.</p>
+ <div class="card">
+  <h2>Profilo atleta</h2>
+  <div class="row"><div><label for="profileHeight">Altezza (cm)</label><input id="profileHeight" type="number" min="100" max="230" placeholder="178"></div><div><label for="profileWeight">Peso (kg)</label><input id="profileWeight" type="number" min="20" max="250" placeholder="70"></div></div>
+  <div class="row" style="margin-top:12px"><button id="saveProfileBtn">Salva dati atleta</button></div>
+  <div id="profileStatus" class="status"><i class="dot"></i><span>Inserisci l'altezza: serve alla calibrazione automatica.</span></div>
+  <p class="note">I dati restano salvati su questo dispositivo: non devi reinserirli a ogni apertura e puoi modificarli quando vuoi.</p>
+ </div>
+ <div class="card">
+  <h2>Unità di misura</h2>
+  <div class="setting"><strong>Altezza</strong><span class="muted">Centimetri (cm)</span></div>
+  <div class="setting"><strong>Tempo</strong><span class="muted">Secondi (s)</span></div>
+  <div class="setting"><strong>Velocità di salita</strong><span class="muted">Metri al secondo (m/s)</span></div>
+ </div>
+ <div class="card">
+  <h2>Preferenze</h2>
+  <div class="setting"><strong>Anteprima altezza in tempo reale</strong><span class="muted">Attiva durante il salto</span></div>
+  <div class="setting"><strong>Conferma salvataggio</strong><span class="muted">Ogni test chiede se salvare o scartare</span></div>
+ </div>
+ <div class="card">
+  <h2>Configurazione test</h2>
+  <div class="setting"><strong>Fotocamera</strong><span class="muted">Anteriore · orientamento verticale · dispositivo fisso.</span></div>
+  <div class="setting"><strong>Modello di tracciamento</strong><span class="muted">MediaPipe Pose Landmarker Lite, eseguito nel browser.</span></div>
+  <div class="setting"><strong>Archiviazione</strong><span class="muted">I salti salvati restano nella memoria locale del browser su questo dispositivo. Non vengono sincronizzati online.</span></div>
+ </div>
+ <div class="card"><h2>Consigli per la precisione</h2><p class="muted">• Mantieni la stessa distanza dalla fotocamera tra calibrazione e salto.<br>• Inquadra tutto il corpo e il pavimento.<br>• Usa luce uniforme e sfondo non troppo affollato.<br>• Evita che braccia o gambe si sovrappongano alla visuale dei piedi.<br>• Se sposti il telefono o cambi posizione, premi Ricalibra.</p></div>
+ <div class="card"><h2>Informazioni</h2><p class="note">JUMP LAB è un prototipo sperimentale. Le misure monoculari sono stime e non sostituiscono pedane di forza, sistemi ottici validati o strumenti da laboratorio.</p><span class="pill">VERSIONE 2.0 · PROTOTIPO</span></div>
+</section>
+
+<nav class="tabs">
+ <button id="tabMeasure" class="active">Misurazione</button>
+ <button id="tabHistory" class="secondary">Storico</button>
+ <button id="tabSettings" class="secondary">Impostazioni</button>
+</nav>
+</main>
+
+<div id="decisionModal" class="modal hidden">
+ <div class="modalbox">
+  <h2 id="modalTitle">Test completato</h2>
+  <p class="muted" id="modalText">Vuoi conservare questo salto nello storico oppure scartarlo?</p>
+  <div class="metric-grid" id="modalMetrics">
+   <div class="metric primary wide"><span>ALTEZZA</span><strong id="modalHeight">—</strong><span>cm</span></div>
+   <div class="metric"><span>TEMPO DI VOLO</span><strong id="modalFlight">—</strong><span>secondi</span></div>
+   <div class="metric"><span>VELOCITÀ MEDIA</span><strong id="modalSpeed">—</strong><span>m/s</span></div>
+  </div>
+  <div class="modal-actions"><button id="discardBtn" class="secondary">Scarta salto</button><button id="saveBtn">Salva nello storico</button></div>
+ </div>
+</div>
+
+<script type="module">
+// MediaPipe viene caricato in modo dinamico DOPO aver richiesto la fotocamera:
+// un problema del CDN/modello non deve impedire a Safari di mostrare il consenso.
+let PoseLandmarker=null, FilesetResolver=null;
+const $=id=>document.getElementById(id);
+const video=$("video"), overlay=$("overlay"), ctx=overlay.getContext("2d");
+let landmarker=null,stream=null,calibrated=false,pxPerCm=0,floorY=0,baselineToeY=0,calSamples=[],lastCalMsg="";
+let running=false,raf=0,lastVideoTime=-1,lastPose=null;
+let takeoffTime=null,peakToeY=null,peakTime=null,contactFrames=0,candidate=null;
+let history=JSON.parse(localStorage.getItem("jumpLabHistory")||"[]");
+// Migrazione: i salti salvati prima erano in cm/s, ora la velocità è in m/s.
+history=history.map(j=>j.speedUnit==="m/s"?j:{...j,speed:Number(((j.speed||0)/100).toFixed(2)),speedUnit:"m/s"});
+try{localStorage.setItem("jumpLabHistory",JSON.stringify(history))}catch(e){}
+let historyDays="all";
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const visible=p=>p&&p.visibility>.5;
+function setStatus(id,msg,live=false){$(id).innerHTML=`<i class="dot ${live?'live':''}"></i><span>${msg}</span>`}
+async function loadModel(){
+ if(landmarker)return true;
+ $("testStatus").textContent="Caricamento tracciamento corporeo…";
+ try{
+  if(!PoseLandmarker||!FilesetResolver){
+   const mp=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm");
+   PoseLandmarker=mp.PoseLandmarker; FilesetResolver=mp.FilesetResolver;
+  }
+  const vision=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const common={runningMode:"VIDEO",numPoses:1,minPoseDetectionConfidence:.55,minPosePresenceConfidence:.55,minTrackingConfidence:.55};
+  try{
+   landmarker=await PoseLandmarker.createFromOptions(vision,{...common,baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"GPU"}});
+  }catch(gpuError){
+   // Fallback CPU per dispositivi/browser che non supportano il delegate GPU.
+   landmarker=await PoseLandmarker.createFromOptions(vision,{...common,baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:"CPU"}});
+  }
+  $("testStatus").textContent="Tracciamento corporeo pronto.";
+  return true;
+ }catch(err){
+  console.error("MediaPipe non disponibile",err);
+  $("testStatus").textContent="Fotocamera attiva, ma tracciamento non caricato: controlla la connessione e ricarica la pagina.";
+  return false;
+ }
+}
+async function openCamera(){
+ // La richiesta permessi viene eseguita subito in risposta al tap dell'utente.
+ try{
+  if(!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+   throw new Error("La fotocamera richiede un indirizzo HTTPS e un browser compatibile. Apri il link GitHub Pages con Safari.");
+  }
+  if(stream)return;
+  $("cameraStatus").textContent="Richiesta autorizzazione fotocamera…";
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"user"},width:{ideal:1280},height:{ideal:720}}});
+  video.srcObject=stream;
+  await new Promise((resolve,reject)=>{if(video.readyState>=2){resolve();return;}video.onloadedmetadata=()=>resolve();video.onerror=()=>reject(new Error("Impossibile avviare il flusso video"));});
+  await video.play();
+  overlay.width=video.videoWidth||640;overlay.height=video.videoHeight||480;
+  $("placeholder").classList.add("hidden");$("cameraBtn").disabled=true;$("cameraOffBtn").disabled=false;
+  $("cameraStatus").textContent="Fotocamera frontale attiva";$("cameraDot").classList.add("live");
+  $("poseBadge").textContent="INQUADRATURA ATTIVA";
+  resetCalibration();loop();
+  const trackingReady=await loadModel();
+  if(trackingReady){$("startBtn").disabled=false;$("poseBadge").textContent="TRACCIAMENTO ATTIVO";}
+  else{$("startBtn").disabled=true;$("poseBadge").textContent="SOLO VIDEO";}
+ }catch(e){
+  console.error("Errore fotocamera",e);
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  $("cameraBtn").disabled=false;$("cameraOffBtn").disabled=true;
+  $("cameraStatus").textContent="Fotocamera non attivata";
+  $("testStatus").textContent="Impossibile aprire la fotocamera: "+(e.name==="NotAllowedError"?"permesso negato. In Safari consenti Fotocamera per questo sito dalle impostazioni del sito.":e.message);
+ }
+}
+function closeCamera(){
+ stopTest(false);if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;cancelAnimationFrame(raf);
+ $("cameraBtn").disabled=false;$("cameraOffBtn").disabled=true;$("startBtn").disabled=true;$("finishBtn").disabled=true;
+ $("cameraStatus").textContent="Fotocamera non attiva";$("cameraDot").classList.remove("live");$("poseBadge").textContent="NON ATTIVO";
+ $("placeholder").classList.remove("hidden");ctx.clearRect(0,0,overlay.width,overlay.height);
+ resetCalibration();
+}
+function getToePoints(lm){return [lm[31],lm[32]].filter(visible)}
+function getFloorPoints(lm){return [lm[29],lm[30],lm[31],lm[32]].filter(visible)}
+function drawPose(lm){
+ ctx.clearRect(0,0,overlay.width,overlay.height);if(!lm)return;
+ const links=[[11,12],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[28,30],[27,31],[28,32],[11,13],[13,15],[12,14],[14,16]];
+ ctx.lineWidth=Math.max(3,overlay.width*.004);ctx.strokeStyle="#48d7ff";ctx.fillStyle="#f5fbff";
+ for(const [a,b] of links){if(visible(lm[a])&&visible(lm[b])){ctx.beginPath();ctx.moveTo(lm[a].x*overlay.width,lm[a].y*overlay.height);ctx.lineTo(lm[b].x*overlay.width,lm[b].y*overlay.height);ctx.stroke()}}
+ for(const i of [0,11,12,13,14,15,16,23,24,25,26,27,28,29,30,31,32])if(visible(lm[i])){ctx.beginPath();ctx.arc(lm[i].x*overlay.width,lm[i].y*overlay.height,Math.max(4,overlay.width*.006),0,Math.PI*2);ctx.fill()}
+ if(calibrated){ctx.strokeStyle="#ffbf69";ctx.lineWidth=2;ctx.setLineDash([10,8]);ctx.beginPath();ctx.moveTo(0,floorY*overlay.height);ctx.lineTo(overlay.width,floorY*overlay.height);ctx.stroke();ctx.setLineDash([])}
+}
+function loop(){
+ if(!stream)return;
+ if(video.readyState>=2&&video.currentTime!==lastVideoTime){
+  lastVideoTime=video.currentTime;
+  if(landmarker){
+   try{
+    const res=landmarker.detectForVideo(video,performance.now()),lm=res.landmarks?.[0];
+    if(lm){lastPose=lm;drawPose(lm);if(!calibrated)autoCalibrate(lm);else if(running&&!candidate)processPose(lm,performance.now())}
+    else{if(running)contactFrames=0;if(!calibrated&&profileHeight()){calSamples=[];setCal("Non ti vedo: mettiti a figura intera davanti alla fotocamera")}}
+   }catch(err){console.error("Errore pose tracking",err);}
+  }
+ }
+ raf=requestAnimationFrame(loop);
+}
+const CAL_FRAMES=25;
+function profileHeight(){const h=Number(localStorage.getItem("jumpLabProfileHeight"));return h>=100&&h<=230?h:0}
+let calOkTimer=0;
+// kind: "wait" (in attesa) | "progress" (barra) | "ok" (completata)
+function setCal(msg,kind="wait",pct=0){
+ if(msg===lastCalMsg)return;lastCalMsg=msg;
+ const ok=kind==="ok";
+ setStatus("calStatus",ok?"✓ "+msg:msg,ok);$("calStatus").classList.toggle("ok",ok);
+ $("videoWrap").classList.toggle("calibrated",ok);
+ const b=$("calBanner");
+ clearTimeout(calOkTimer);
+ if(!stream){b.classList.add("hidden");return}
+ b.classList.remove("hidden","compact");b.classList.toggle("ok",ok);b.classList.toggle("nobar",kind==="wait");
+ $("calBannerText").textContent=ok?"✓ CALIBRAZIONE COMPLETATA":msg;
+ $("calBar").firstElementChild.style.width=(kind==="progress"?pct:0)+"%";
+ if(ok){
+  // dopo 4 secondi il banner si riduce a una piccola etichetta, il bordo resta verde
+  calOkTimer=setTimeout(()=>{if(calibrated){b.classList.add("compact");$("calBannerText").textContent="✓ CALIBRATO"}},4000);
+ }
+}
+function resetCalibration(){
+ calibrated=false;pxPerCm=0;calSamples=[];lastCalMsg="";
+ if(!profileHeight())setCal("Imposta la tua altezza nella schermata Impostazioni");
+ else if(!stream)setCal("Attiva la fotocamera: la calibrazione parte da sola");
+ else setCal("Mettiti a figura intera: calibrazione automatica in corso…");
+}
+function autoCalibrate(lm){
+ const h=profileHeight();
+ if(!h){calSamples=[];setCal("Imposta la tua altezza nella schermata Impostazioni");return}
+ const toes=getToePoints(lm),floorPts=getFloorPoints(lm);
+ if(!lm||!visible(lm[0])||toes.length<2||floorPts.length<2){calSamples=[];setCal("Non vedo bene testa e piedi: mettiti a figura intera");return}
+ const pts=[lm[0],...floorPts];
+ if(pts.some(p=>p.x<.03||p.x>.97||p.y<.02||p.y>.98)){calSamples=[];setCal("Sei troppo vicino al bordo: allontanati un po'");return}
+ const top=lm[0].y,bottom=Math.max(...floorPts.map(p=>p.y));
+ if((bottom-top)*overlay.height<120||bottom-top<.4){calSamples=[];setCal("Figura troppo piccola: avvicinati un po'");return}
+ calSamples.push({top,bottom,toe:(toes[0].y+toes[1].y)/2});
+ if(calSamples.length>CAL_FRAMES)calSamples.shift();
+ if(calSamples.length<CAL_FRAMES){const pct=Math.round(calSamples.length/CAL_FRAMES*100);setCal(`Resta fermo… ${pct}%`,"progress",pct);return}
+ const range=k=>Math.max(...calSamples.map(x=>x[k]))-Math.min(...calSamples.map(x=>x[k]));
+ if(range("top")>.02||range("bottom")>.02){setCal("Resta fermo per completare la calibrazione…","progress",100);return}
+ const avg=k=>calSamples.reduce((a,x)=>a+x[k],0)/calSamples.length;
+ const aTop=avg("top"),aBottom=avg("bottom");
+ pxPerCm=(aBottom-aTop)*overlay.height/h;floorY=aBottom;baselineToeY=avg("toe");calibrated=true;calSamples=[];
+ setCal(`Calibrazione completata · ${pxPerCm.toFixed(2)} px/cm`,"ok");
+}
+function resetAttempt(){
+ takeoffTime=null;peakToeY=null;peakTime=null;contactFrames=0;candidate=null;
+ $("livePreview").classList.add("hidden");
+ $("outHeight").textContent="—";$("outFlight").textContent="—";$("outSpeed").textContent="—";
+}
+function startTest(){
+ if(!stream){$("testStatus").textContent="Attiva prima la fotocamera.";return}
+ if(!calibrated){$("testStatus").textContent="Calibrazione non ancora completata: mettiti a figura intera e resta fermo un secondo.";return}
+ resetAttempt();running=true;
+ $("startBtn").disabled=true;$("finishBtn").disabled=false;
+ setStatus("testStatus","Test attivo · esegui un salto quando sei pronto.",true);
+}
+function processPose(lm,now){
+ const toes=getToePoints(lm);
+ if(toes.length<2)return;
+ // Si usa il piede più basso: entrambi devono risultare staccati dal pavimento.
+ const lowerToeY=Math.max(toes[0].y,toes[1].y);
+ const lift=(baselineToeY-lowerToeY)*overlay.height/pxPerCm;
+ const airborne=lowerToeY<baselineToeY-.012 && lowerToeY<floorY-.008;
+ if(airborne){
+  contactFrames=0;
+  if(takeoffTime===null){takeoffTime=now;peakToeY=lowerToeY;peakTime=now}
+  if(lowerToeY<peakToeY){peakToeY=lowerToeY;peakTime=now}
+  const height=Math.max(0,(baselineToeY-peakToeY)*overlay.height/pxPerCm);
+  const ascent=Math.max(.001,(peakTime-takeoffTime)/1000);
+  $("livePreview").classList.remove("hidden");
+  $("livePreview").textContent=`Anteprima live · altezza massima ${height.toFixed(1)} cm${peakTime>takeoffTime?` · velocità media ${(height/100/ascent).toFixed(2)} m/s`:" · salita in corso"}`;
+ }else if(takeoffTime!==null){
+  contactFrames++;
+  if(contactFrames>=2){
+   const flight=(now-takeoffTime)/1000;
+   const height=Math.max(0,(baselineToeY-peakToeY)*overlay.height/pxPerCm);
+   const ascent=Math.max(.001,(peakTime-takeoffTime)/1000);
+   if(flight>.12&&flight<1.5&&height>2){
+    candidate={date:new Date().toISOString(),height:Number(height.toFixed(1)),flight:Number(flight.toFixed(3)),speed:Number((height/100/ascent).toFixed(2)),speedUnit:"m/s",flightEstimate:Number((9.81*flight*flight/8*100).toFixed(1))};
+    showCandidate();
+    setStatus("testStatus","Salto rilevato · anteprima pronta. Premi Fine test.",true);
+   }else{
+    setStatus("testStatus","Movimento non riconosciuto come salto valido. Puoi riprovare.");
+    takeoffTime=null;peakToeY=null;peakTime=null;contactFrames=0;
+   }
+  }
+ }
+}
+function showCandidate(){
+ const c=candidate;
+ $("outHeight").textContent=c.height.toFixed(1);$("outFlight").textContent=c.flight.toFixed(3);
+ $("outSpeed").textContent=c.speed.toFixed(2);
+ $("livePreview").classList.remove("hidden");
+ $("livePreview").textContent=`Salto completato · ${c.height.toFixed(1)} cm · ${c.flight.toFixed(3)} s · ${c.speed.toFixed(2)} m/s`;
+}
+function finishTest(){
+ if(!running)return;
+ running=false;$("startBtn").disabled=false;$("finishBtn").disabled=true;
+ const ok=!!candidate;
+ // Il popup compare sempre alla fine del test: con salto valido chiede se salvare o scartare.
+ $("modalTitle").textContent=ok?"Test completato":"Nessun salto rilevato";
+ $("modalText").textContent=ok?"Vuoi conservare questo salto nello storico oppure scartarlo?":"Non ho riconosciuto un salto valido. Premi Riprova e rifai il test.";
+ $("modalMetrics").classList.toggle("hidden",!ok);$("saveBtn").classList.toggle("hidden",!ok);
+ $("discardBtn").textContent=ok?"Scarta salto":"Riprova";
+ if(ok){
+  $("modalHeight").textContent=candidate.height.toFixed(1);$("modalFlight").textContent=candidate.flight.toFixed(3);
+  $("modalSpeed").textContent=candidate.speed.toFixed(2);
+ }
+ $("decisionModal").classList.remove("hidden");
+}
+function stopTest(reset=true){running=false;$("finishBtn").disabled=true;if(stream)$("startBtn").disabled=false;if(reset)resetAttempt()}
+function saveCandidate(){
+ if(!candidate)return;
+ history.unshift(candidate);history=history.slice(0,300);localStorage.setItem("jumpLabHistory",JSON.stringify(history));
+ $("decisionModal").classList.add("hidden");setStatus("testStatus","Salto salvato nello storico.",true);candidate=null;
+}
+function discardCandidate(){
+ const had=!!candidate;candidate=null;$("decisionModal").classList.add("hidden");setStatus("testStatus",had?"Salto scartato. Puoi iniziare subito un nuovo test.":"Premi Inizia test per riprovare.");
+ resetAttempt();
+}
+function filteredHistory(){
+ if(historyDays==="all")return history;
+ const cutoff=Date.now()-Number(historyDays)*86400000;
+ return history.filter(j=>new Date(j.date).getTime()>=cutoff);
+}
+function drawChart(){
+ const c=$("progress"),g=c.getContext("2d"),w=c.width,h=c.height;g.clearRect(0,0,w,h);
+ g.strokeStyle="#28496f";g.lineWidth=1;for(let i=1;i<=4;i++){const y=i*h/5;g.beginPath();g.moveTo(42,y);g.lineTo(w-12,y);g.stroke()}
+ if(!history.length){g.fillStyle="#9bb2d2";g.font="18px sans-serif";g.fillText("I tuoi progressi appariranno qui",42,h/2);return}
+ const filtered=filteredHistory();
+ const data=filtered.slice(0,30).reverse(),max=Math.max(10,...data.map(x=>x.height))*1.2;
+ const pt=(d,i)=>[45+i*(w-65)/Math.max(1,data.length-1),h-28-(d.height/max)*(h-55)];
+ // prima la linea che collega tutti i punti, poi i pallini sopra
+ if(data.length>1){
+  g.strokeStyle="#42baff";g.lineWidth=4;g.lineJoin="round";g.lineCap="round";g.beginPath();
+  data.forEach((d,i)=>{const [x,y]=pt(d,i);if(i===0)g.moveTo(x,y);else g.lineTo(x,y)});
+  g.stroke();
+ }
+ g.fillStyle="#67d5ff";
+ data.forEach((d,i)=>{const [x,y]=pt(d,i);g.beginPath();g.arc(x,y,5,0,Math.PI*2);g.fill()});
+ g.fillStyle="#9bb2d2";g.font="13px sans-serif";g.fillText("cm",8,18);
+}
+function renderHistory(){
+ const data=filteredHistory();
+ $("historyList").innerHTML=data.length?data.map(j=>`<div class="history-item"><div><strong>${j.height.toFixed(1)} cm</strong><small>${new Date(j.date).toLocaleString("it-IT")}</small></div><div style="text-align:right"><strong>${j.flight.toFixed(3)} s</strong><small>${j.speed.toFixed(2)} m/s · salita</small></div></div>`).join(""):"Nessun salto salvato nel periodo selezionato.";
+ $("totalJumps").textContent=data.length;
+ const best=data.length?data.reduce((a,b)=>a.height>b.height?a:b):null;
+ $("bestJump").textContent=best?best.height.toFixed(1)+" cm":"—";
+ $("bestDate").textContent=best?new Date(best.date).toLocaleDateString("it-IT"):"—";
+ $("averageJump").textContent=data.length?(data.reduce((a,b)=>a+b.height,0)/data.length).toFixed(1):"—";
+ $("lastSpeed").textContent=data.length?data[0].speed.toFixed(2):"—";
+ drawChart();
+}
+function showTab(name){
+ for(const id of ["measure","history","settings"]){$(id+"View").classList.toggle("hidden",id!==name);$("tab"+id[0].toUpperCase()+id.slice(1)).classList.toggle("active",id===name);$("tab"+id[0].toUpperCase()+id.slice(1)).classList.toggle("secondary",id!==name)}
+ if(name==="history")renderHistory();
+}
+$("cameraBtn").onclick=openCamera;$("cameraOffBtn").onclick=closeCamera;$("recalBtn").onclick=resetCalibration;
+$("startBtn").onclick=startTest;$("finishBtn").onclick=finishTest;
+$("saveBtn").onclick=saveCandidate;$("discardBtn").onclick=discardCandidate;
+$("tabMeasure").onclick=()=>showTab("measure");$("tabHistory").onclick=()=>showTab("history");$("tabSettings").onclick=()=>showTab("settings");
+$("clearHistory").onclick=()=>{if(confirm("Vuoi cancellare tutti i salti salvati?")){history=[];localStorage.removeItem("jumpLabHistory");renderHistory()}};
+document.querySelectorAll(".historyFilter").forEach(b=>b.addEventListener("click",()=>{historyDays=b.dataset.filter;document.querySelectorAll(".historyFilter").forEach(x=>x.classList.toggle("active",x===b));renderHistory()}));
+$("profileHeight").value=localStorage.getItem("jumpLabProfileHeight")||"";
+$("profileWeight").value=localStorage.getItem("jumpLabProfileWeight")||"";
+function saveProfile(){
+ const h=Number($("profileHeight").value),w=$("profileWeight").value;
+ if(!h||h<100||h>230){setStatus("profileStatus","Inserisci un'altezza valida tra 100 e 230 cm.");return}
+ const changed=String(h)!==localStorage.getItem("jumpLabProfileHeight");
+ localStorage.setItem("jumpLabProfileHeight",String(h));localStorage.setItem("jumpLabProfileWeight",w);
+ setStatus("profileStatus","Dati atleta salvati su questo dispositivo ✓",true);
+ if(changed||!calibrated)resetCalibration();
+}
+$("saveProfileBtn").onclick=saveProfile;
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if(profileHeight())setStatus("profileStatus","Dati atleta caricati ✓ · puoi modificarli e premere Salva",true);
+resetCalibration();
+if(!profileHeight())showTab("settings");
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
